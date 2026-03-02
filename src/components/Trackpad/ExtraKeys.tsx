@@ -123,7 +123,7 @@ export const ExtraKeys: React.FC<ExtraKeysProps> = ({ sendKey }) => {
 
 	return (
 		<div className="grid grid-cols-6 grid-rows-6 gap-1 p-1 w-full bg-base-100">
-			{keys.map((k, i) => (
+			{keys.map((k) => (
 				<button
 					type="button"
 					key={k.key}
@@ -141,6 +141,3 @@ export const ExtraKeys: React.FC<ExtraKeysProps> = ({ sendKey }) => {
 		</div>
 	)
 }
-
-
-
