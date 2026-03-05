@@ -7,6 +7,7 @@ let
     nspr
     alsa-lib
     libglvnd
+    dbus
     xorg.libXtst
     xorg.libX11
     xorg.libXext
@@ -15,13 +16,14 @@ in
 pkgs.mkShell {
   buildInputs = [
     pkgs.nodejs_24
+    pkgs.procps
   ] ++ sharedLibs;
 
   shellHook = ''
     export LD_LIBRARY_PATH=${pkgs.lib.makeLibraryPath sharedLibs}:$LD_LIBRARY_PATH
     
     # Alias for starting the application
-    alias start="npm run start:server & npm run dev"
+    alias start="npm i && npm run electron-dev"
   '';
 }
 
