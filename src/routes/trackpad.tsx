@@ -13,6 +13,11 @@ export const Route = createFileRoute("/trackpad")({
 	component: TrackpadPage,
 })
 
+type ClipboardMessage = {
+	type: "clipboard-text"
+	text: string
+}
+
 function TrackpadPage() {
 	const [scrollMode, setScrollMode] = useState(false)
 	const [modifier, setModifier] = useState<ModifierState>("Release")
@@ -36,7 +41,7 @@ function TrackpadPage() {
 		return s ? JSON.parse(s) : false
 	})
 
-	const { send, sendCombo } = useRemoteConnection()
+	const { send, sendCombo, subscribe } = useRemoteConnection()
 	// Pass sensitivity and invertScroll to the gesture hook
 	const { isTracking, handlers } = useTrackpadGesture(
 		send,
@@ -53,6 +58,33 @@ function TrackpadPage() {
 			hiddenInputRef.current?.blur()
 		}
 	}, [keyboardOpen])
+    
+
+	useEffect(() => {
+        const unsubscribe = subscribe("clipboard-text", async (msg) => {
+            const data = msg as ClipboardMessage
+		        
+				try {
+			        const text = data.text || ""
+
+			        if (navigator.clipboard && window.isSecureContext) {
+				        await navigator.clipboard.writeText(text)
+			        } else {
+				        const textarea = document.createElement("textarea")
+				        textarea.value = text
+				        document.body.appendChild(textarea)
+				        textarea.select()
+				        document.execCommand("copy")
+				        document.body.removeChild(textarea)
+			        }
+		        } catch (err) {
+			        console.error("Clipboard write failed", err)
+		        }
+			}
+		)
+	
+	    return () => unsubscribe()
+    }, [subscribe])
 
 	const toggleKeyboard = () => {
 		setKeyboardOpen((prev) => !prev)
@@ -67,29 +99,30 @@ function TrackpadPage() {
 		// Release after short delay to simulate click
 		setTimeout(() => send({ type: "click", button, press: false }), 50)
 	}
+ 
+	const handleCopy = () => {
+        // copy from SERVER → CLIENT
+        send({ type: "clipboard-pull" })
+    }
 
-	const handleCopy = async () => {
-		try {
-			let text = ""
+    const handlePaste = async () => {
+       //  paste from CLIENT → SERVER
+       try {
+           let text = ""
 
-			if (navigator.clipboard && window.isSecureContext) {
-				text = await navigator.clipboard.readText()
-			} else {
-				// fallback → use selected text
-				text = window.getSelection()?.toString() || ""
-			}
+            if (navigator.clipboard && window.isSecureContext) {
+                text = await navigator.clipboard.readText()
+            } else {
+            text = window.getSelection()?.toString() || ""
+            }
 
-			send({
-				type: "clipboard-push",
-				text,
-			})
-		} catch (err) {
-			console.error("Copy failed", err)
+            send({
+                type: "clipboard-push",
+                text,
+            })
+        } catch (err) {
+            console.error("Paste failed", err)
 		}
-	}
-
-	const handlePaste = async () => {
-		send({ type: "clipboard-pull" })
 	}
 
 	const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
