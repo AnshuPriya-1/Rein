@@ -117,14 +117,11 @@ export async function createWsServer(
 			token: string | null,
 			isLocal: boolean,
 		) => {
-            const inputHandler = new InputHandler(
-                (msg) => {
-                    if (ws.readyState === WebSocket.OPEN) {
-                        ws.send(JSON.stringify(msg))
-                    }
-			    },
-			    inputThrottleMs
-			)
+			const inputHandler = new InputHandler((msg) => {
+				if (ws.readyState === WebSocket.OPEN) {
+					ws.send(JSON.stringify(msg))
+				}
+			}, inputThrottleMs)
 			// Localhost: only store token if it's already known (trusted scan)
 			// Remote: token is already validated in the upgrade handler
 			logger.info(`Client connected from ${request.socket.remoteAddress}`)
@@ -353,7 +350,7 @@ export async function createWsServer(
 						"copy",
 						"paste",
 						"clipboard-push",
-	                    "clipboard-pull",
+						"clipboard-pull",
 					]
 					if (!msg.type || !VALID_INPUT_TYPES.includes(msg.type)) {
 						logger.warn(`Unknown message type: ${msg.type}`)
