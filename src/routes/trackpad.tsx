@@ -120,6 +120,9 @@ function TrackpadPage() {
 			})
 		} catch (err) {
 			console.error("Paste failed", err)
+
+			// fallback to server-side paste
+			send({ type: "paste" })
 		}
 	}
 
